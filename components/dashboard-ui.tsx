@@ -188,7 +188,7 @@ export const Timeline = ({ items, traceable = false }: any) => {
         return (
           <div
             key={i}
-            className="relative flex flex-col md:flex-row items-center justify-between md:justify-normal md:odd:flex-row-reverse group"
+            className="relative flex flex-row md:flex-row items-center justify-between md:justify-normal md:odd:flex-row-reverse group"
           >
             <div className="flex items-center justify-center w-10 h-10 rounded-full border-[3px] border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-teal-600 dark:text-teal-400 font-bold text-xs shadow-sm md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 shrink-0">
               {i + 1}
