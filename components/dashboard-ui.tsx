@@ -10,6 +10,10 @@ import {
   FileSearch,
   ShieldAlert,
   Layers,
+  Clock,
+  Users,
+  Activity,
+  Percent
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -257,3 +261,95 @@ export const EmptyStateView = () => (
     </p>
   </div>
 );
+
+export const ValidationResultView = ({ result }: any) => {
+  if (!result) return null;
+  const isApproved = result.violations?.length === 0;
+
+  return (
+    <div className="space-y-6 mt-6">
+      <div
+        className={`p-5 rounded-2xl border flex items-center justify-between ${
+          isApproved
+            ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-900"
+            : "bg-rose-50 border-rose-200 dark:bg-rose-950/30 dark:border-rose-900"
+        }`}
+      >
+        <div>
+          <h4
+            className={`text-xs font-bold uppercase tracking-wider mb-1 ${
+              isApproved
+                ? "text-emerald-800 dark:text-emerald-400"
+                : "text-rose-800 dark:text-rose-400"
+            }`}
+          >
+            Final State
+          </h4>
+          <span
+            className={`text-2xl font-black uppercase ${
+              isApproved
+                ? "text-emerald-600 dark:text-emerald-500"
+                : "text-rose-600 dark:text-rose-500"
+            }`}
+          >
+            {result.status}
+          </span>
+        </div>
+        {isApproved ? (
+          <CheckCircle2 className="w-12 h-12 text-emerald-500 opacity-20" />
+        ) : (
+          <AlertTriangle className="w-12 h-12 text-rose-500 opacity-20" />
+        )}
+      </div>
+
+      <div>
+        <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
+          Execution Path
+        </h4>
+        <div className="flex flex-wrap items-center gap-2">
+          {result.path.map((node: string, idx: number) => (
+            <div key={idx} className="flex items-center gap-2">
+              <Badge
+                variant="outline"
+                className="px-3 py-1.5 text-xs bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 uppercase tracking-wider"
+              >
+                {node}
+              </Badge>
+              {idx < result.path.length - 1 && (
+                <GitCommit className="w-4 h-4 text-zinc-400" />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {result.violations?.length > 0 && (
+        <div>
+          <h4 className="text-sm font-semibold text-rose-600 dark:text-rose-400 mb-4 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" /> Failed Rules
+          </h4>
+          <ul className="space-y-3">
+            {result.violations.map((v: any, i: number) => (
+              <li
+                key={i}
+                className="p-4 rounded-xl border bg-rose-50/50 border-rose-100 dark:bg-rose-950/20 dark:border-rose-900/30"
+              >
+                <div className="text-sm font-semibold text-rose-800 dark:text-rose-300 mb-1">
+                  Entity: <span className="font-mono">{v.fact}</span>
+                </div>
+                <div className="text-sm text-rose-700 dark:text-rose-400 flex items-center gap-4 mt-2">
+                  <span className="bg-white dark:bg-rose-950 px-2 py-1 rounded border border-rose-200 dark:border-rose-900">
+                    Received: <strong>{String(v.providedValue)}</strong>
+                  </span>
+                  <span className="bg-white dark:bg-rose-950 px-2 py-1 rounded border border-rose-200 dark:border-rose-900">
+                    Required: <strong>{String(v.requiredValue)}</strong>
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};

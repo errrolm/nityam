@@ -18,10 +18,14 @@ import {
   Timeline,
   LoadingView,
   EmptyStateView,
+  ValidationResultView,
 } from "@/components/dashboard-ui";
 
 import {
   ShieldAlert,
+  BadgeCheck,
+  ListChevronsDownUp,
+  ListChevronsUpDown,
   User,
   Download,
   AlertTriangle,
@@ -49,7 +53,7 @@ import {
   Search,
   Plus,
   Trash2,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -69,7 +73,9 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [policyText, setPolicyText] = useState("");
-  const [mode, setMode] = useState<"officer" | "citizen">("officer");
+  const [mode, setMode] = useState<"officer" | "citizen" | "compile_rules">(
+    "officer",
+  );
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [refiningType, setRefiningType] = useState<
@@ -83,6 +89,10 @@ export default function Home() {
     const stored = localStorage.getItem("theme");
     return stored === "light" || stored === "dark" ? stored : "dark";
   });
+
+  const [caseData, setCaseData] = useState<Record<string, any>>({});
+  const [validationResult, setValidationResult] = useState<any>(null);
+  const [isValidating, setIsValidating] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.remove("light", "dark");
@@ -126,6 +136,8 @@ export default function Home() {
       if (result?.__workflowId === id) {
         setResult(null);
         setPolicyText("");
+        setValidationResult(null);
+        setCaseData({});
       }
     }
   };
@@ -134,6 +146,8 @@ export default function Home() {
     await supabase.auth.signOut();
     setResult(null);
     setPolicyText("");
+    setValidationResult(null);
+    setCaseData({});
     setShowSidebar(false);
   };
 
@@ -141,6 +155,8 @@ export default function Home() {
     setPolicyText(item.policy_text);
     setMode(item.mode);
     setResult({ ...item.result_json, __workflowId: item.id });
+    setValidationResult(null);
+    setCaseData({});
     if (window.innerWidth < 1024) setShowSidebar(false);
   };
 
@@ -195,7 +211,11 @@ export default function Home() {
     setLoading(true);
     setError(null);
     if (actionType) setRefiningType(actionType as any);
-    else setResult(null);
+    else {
+      setResult(null);
+      setValidationResult(null);
+      setCaseData({});
+    }
 
     try {
       const res = await fetch("/api/gemini", {
@@ -245,6 +265,29 @@ export default function Home() {
     } finally {
       setLoading(false);
       setRefiningType(null);
+    }
+  };
+
+  const runValidation = async () => {
+    if (!result || !result.rules) return;
+    setIsValidating(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ schema: result, caseData }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      setValidationResult(data);
+    } catch (err: any) {
+      setError(err.message || "Failed to execute validation");
+    } finally {
+      setIsValidating(false);
     }
   };
 
@@ -311,6 +354,8 @@ export default function Home() {
                   onClick={() => {
                     setPolicyText("");
                     setResult(null);
+                    setValidationResult(null);
+                    setCaseData({});
                     if (window.innerWidth < 1024) setShowSidebar(false);
                   }}
                   className="cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl"
@@ -437,14 +482,12 @@ export default function Home() {
                   )}
                 </Button>
               )}
-              <div>
-                <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 tracking-tight flex items-center gap-2">
-                  <Layers className="w-6 h-6 text-teal-600 dark:text-teal-500" />
-                  Nityam
-                </h1>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                  Transform policy text into structured workflows.
-                </p>
+              <div className="h-10 w-auto">
+                <img
+                  src="/logo.png"
+                  alt="Nityam Logo"
+                  className="h-full w-auto object-contain"
+                />
               </div>
             </div>
 
@@ -453,7 +496,12 @@ export default function Home() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setMode("officer")}
+                  onClick={() => {
+                    setMode("officer");
+                    setResult(null);
+                    setValidationResult(null);
+                    setCaseData({});
+                  }}
                   className={`gap-2 flex-1 sm:flex-none cursor-pointer ${mode === "officer" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm" : "text-zinc-600 dark:text-zinc-400"}`}
                 >
                   <ShieldAlert className="w-4 h-4" /> Officer
@@ -461,10 +509,28 @@ export default function Home() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setMode("citizen")}
+                  onClick={() => {
+                    setMode("citizen");
+                    setResult(null);
+                    setValidationResult(null);
+                    setCaseData({});
+                  }}
                   className={`gap-2 flex-1 sm:flex-none cursor-pointer ${mode === "citizen" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm" : "text-zinc-600 dark:text-zinc-400"}`}
                 >
                   <User className="w-4 h-4" /> Citizen
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setMode("compile_rules");
+                    setResult(null);
+                    setValidationResult(null);
+                    setCaseData({});
+                  }}
+                  className={`gap-2 flex-1 sm:flex-none cursor-pointer ${mode === "compile_rules" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm" : "text-zinc-600 dark:text-zinc-400"}`}
+                >
+                  <ListChecks className="w-4 h-4" /> Validation
                 </Button>
               </div>
               <Button
@@ -570,6 +636,11 @@ export default function Home() {
                     isLoading={loading}
                     refiningType={refiningType}
                     onChecklistUpdate={handleChecklistUpdate}
+                    caseData={caseData}
+                    setCaseData={setCaseData}
+                    runValidation={runValidation}
+                    isValidating={isValidating}
+                    validationResult={validationResult}
                   />
                 ) : (
                   <EmptyStateView key="empty" />
@@ -591,7 +662,20 @@ function ResultView({
   isLoading,
   refiningType,
   onChecklistUpdate,
+  caseData,
+  setCaseData,
+  runValidation,
+  isValidating,
+  validationResult,
 }: any) {
+  const formatLabel = (str: string) => {
+    return str
+      .replace(/([A-Z])/g, " $1")
+      .replace(/[_-]/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+      .trim();
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -612,7 +696,7 @@ function ResultView({
           {refiningType === "elaborate" ? (
             <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
           ) : (
-            <FileSearch className="w-3.5 h-3.5 mr-2" />
+            <ListChevronsUpDown className="w-3.5 h-3.5 mr-2" />
           )}
           Elaborate
         </Button>
@@ -625,7 +709,7 @@ function ResultView({
           {refiningType === "simplify" ? (
             <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
           ) : (
-            <ListChecks className="w-3.5 h-3.5 mr-2" />
+            <ListChevronsDownUp className="w-3.5 h-3.5 mr-2" />
           )}
           Simplify
         </Button>
@@ -640,234 +724,343 @@ function ResultView({
         </Button>
       </div>
 
-      <Card className="shadow-sm border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
-        <CardHeader className="pb-2 bg-zinc-50/50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800">
-          <CardTitle className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-            Executive Summary
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <p className="text-zinc-700 dark:text-zinc-300 leading-relaxed text-sm">
-            <FormatText text={result.summary} />
-          </p>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="shadow-sm border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
-          <CardHeader className="pb-2 bg-zinc-50/50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800">
-            <CardTitle className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-              Risk Profile
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-5 space-y-6">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Threat Level
-              </span>
-              <Badge
-                variant="outline"
-                className={`px-2.5 py-0.5 rounded-md ${getRiskColor(result.risk_level)}`}
-              >
-                {result.risk_level}
-              </Badge>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="font-medium text-zinc-700 dark:text-zinc-300">
-                  Complexity
-                </span>
-                <span className="text-zinc-500 font-mono">
-                  {result.complexity_score}/10
-                </span>
-              </div>
-              <Progress
-                value={(result.complexity_score || 0) * 10}
-                className="h-2"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {mode === "officer" && result.metrics && (
-          <Card className="shadow-sm border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
-            <CardHeader className="pb-2 bg-zinc-50/50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800">
-              <CardTitle className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-                Quantitative Insights
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="grid grid-cols-2 gap-3">
-                <MetricBox
-                  icon={<Clock />}
-                  label="Est. Time"
-                  value={result.metrics.estimated_processing_time}
-                />
-                <MetricBox
-                  icon={<Users />}
-                  label="Manpower"
-                  value={result.metrics.manpower_level}
-                />
-                <MetricBox
-                  icon={<Activity />}
-                  label="Dept Load"
-                  value={result.metrics.department_load}
-                />
-                <MetricBox
-                  icon={<Percent />}
-                  label="Risk Exp"
-                  value={`${result.metrics.risk_exposure_percent}%`}
-                  isDanger={result.metrics.risk_exposure_percent > 60}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {mode === "officer" ? (
-        <Card className="shadow-sm border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800 overflow-hidden">
-          <Tabs defaultValue="workflow" className="w-full">
-            <CardHeader className="p-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
-              <TabsList className="bg-zinc-100 dark:bg-zinc-800/60 p-1 flex rounded-xl gap-1 overflow-x-auto hide-scrollbar border border-zinc-200 dark:border-zinc-800 shadow-inner w-full justify-start">
-                <TabItem
-                  value="workflow"
-                  icon={<CheckCircle2 className="w-3.5 h-3.5 text-teal-600" />}
-                >
-                  Workflow
-                </TabItem>
-                <TabItem
-                  value="checklist"
-                  icon={<CheckSquare className="w-3.5 h-3.5 text-emerald-500" />}
-                >
-                  Checklists
-                </TabItem>
-                <TabItem
-                  value="slas"
-                  icon={<Clock className="w-3.5 h-3.5 text-blue-500" />}
-                >
-                  SLAs
-                </TabItem>
-                <TabItem
-                  value="decision_points"
-                  icon={<GitCommit className="w-3.5 h-3.5 text-indigo-500" />}
-                >
-                  Decisions
-                </TabItem>
-                <TabItem
-                  value="risks"
-                  icon={<AlertTriangle className="w-3.5 h-3.5 text-rose-500" />}
-                >
-                  Risks
-                </TabItem>
-                <TabItem
-                  value="ambiguities"
-                  icon={<FileSearch className="w-3.5 h-3.5 text-amber-500" />}
-                >
-                  Ambiguities
-                </TabItem>
-                <TabItem
-                  value="gaps"
-                  icon={<ShieldAlert className="w-3.5 h-3.5 text-orange-500" />}
-                >
-                  Gaps
-                </TabItem>
-              </TabsList>
-            </CardHeader>
-            <CardContent className="p-0 sm:p-6">
-              <TabsContent value="workflow" className="m-0 p-4 sm:p-0">
-                <Timeline items={result.workflow} traceable={true} />
-              </TabsContent>
-              <TabsContent value="checklist" className="m-0 p-4 sm:p-0">
-                <div className="space-y-6">
-                  <InteractiveChecklist
-                    items={result.documents_required}
-                    title="Required Documents"
-                    result={result}
-                    onChecklistUpdate={onChecklistUpdate}
-                  />
-                  <InteractiveChecklist
-                    items={result.checklist}
-                    title="Verification Actions"
-                    result={result}
-                    onChecklistUpdate={onChecklistUpdate}
-                  />
-                </div>
-              </TabsContent>
-              <TabsContent value="slas" className="m-0 p-4 sm:p-0">
-                <SlaTimeline items={result.slas} />
-              </TabsContent>
-              <TabsContent value="decision_points" className="m-0 p-4 sm:p-0">
-                <List
-                  items={result.decision_points}
-                  icon={<GitCommit className="w-4 h-4 text-teal-600" />}
-                />
-              </TabsContent>
-              <TabsContent value="risks" className="m-0 p-4 sm:p-0">
-                <List
-                  items={result.risks}
-                  icon={<AlertTriangle className="w-4 h-4 text-rose-500" />}
-                  containerClass="bg-rose-50/50 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/30"
-                />
-              </TabsContent>
-              <TabsContent value="ambiguities" className="m-0 p-4 sm:p-0">
-                {result.ambiguities?.length ? (
-                  <ul className="space-y-3">
-                    {result.ambiguities.map((item: any, i: number) => (
-                      <li
-                        key={i}
-                        className="bg-amber-50/50 dark:bg-amber-950/20 p-4 rounded-xl border border-amber-100 dark:border-amber-900/30"
-                      >
-                        <div className="font-semibold text-sm text-amber-900 dark:text-amber-400 mb-1 flex items-center gap-2">
-                          <FileSearch className="w-4 h-4" /> Term: "{item.term}"
-                        </div>
-                        <div className="text-sm text-amber-800 dark:text-amber-500 leading-relaxed">
-                          Issue: {item.issue}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-zinc-500">
-                    No ambiguities detected.
-                  </p>
-                )}
-              </TabsContent>
-              <TabsContent value="gaps" className="m-0 p-4 sm:p-0">
-                <List
-                  items={result.compliance_gaps}
-                  icon={<ShieldAlert className="w-4 h-4 text-orange-500" />}
-                  containerClass="bg-orange-50/50 dark:bg-orange-950/20 border-orange-100 dark:border-orange-900/30"
-                />
-              </TabsContent>
-            </CardContent>
-          </Tabs>
-        </Card>
-      ) : (
+      {mode === "compile_rules" && result.rules ? (
         <Card className="shadow-sm border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
           <CardHeader className="bg-zinc-50/50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800">
             <CardTitle className="text-base dark:text-zinc-200 flex items-center gap-2">
-              <ListChecks className="w-5 h-5 text-teal-600" /> Step-by-Step
-              Instructions
+              <ListChecks className="w-5 h-5 text-teal-600" /> Validation Form
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-4 sm:p-6 space-y-8">
-            {result.documents_required?.length > 0 && (
-              <InteractiveChecklist
-                items={result.documents_required}
-                title="What You Need to Gather"
-                result={result}
-                onChecklistUpdate={onChecklistUpdate}
-              />
-            )}
-            <div>
-              <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
-                What You Need to Do
-              </h4>
-              <Timeline items={result.instructions} traceable={false} />
+          <CardContent className="p-4 sm:p-6 space-y-4">
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(result.entities || {}).map(
+                  ([key, type]: [string, any]) => (
+                    <div
+                      key={key}
+                      className="space-y-2 bg-zinc-50/50 dark:bg-zinc-950/50 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800"
+                    >
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                          {formatLabel(key)}
+                        </label>
+                        <span className="text-[10px] font-mono tracking-wider uppercase bg-zinc-200/50 dark:bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded-md">
+                          {type}
+                        </span>
+                      </div>
+                      {type === "boolean" ? (
+                        <select
+                          className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                          onChange={(e) =>
+                            setCaseData({
+                              ...caseData,
+                              [key]: e.target.value === "true",
+                            })
+                          }
+                          value={
+                            caseData[key] !== undefined
+                              ? String(caseData[key])
+                              : ""
+                          }
+                        >
+                          <option value="" disabled>
+                            Select option...
+                          </option>
+                          <option value="true">Yes</option>
+                          <option value="false">No</option>
+                        </select>
+                      ) : (
+                        <input
+                          type={
+                            type === "number" || type === "integer"
+                              ? "number"
+                              : "text"
+                          }
+                          placeholder={`Enter ${formatLabel(key).toLowerCase()}...`}
+                          className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                          onChange={(e) =>
+                            setCaseData({
+                              ...caseData,
+                              [key]:
+                                type === "number" || type === "integer"
+                                  ? Number(e.target.value)
+                                  : e.target.value,
+                            })
+                          }
+                          value={caseData[key] || ""}
+                        />
+                      )}
+                    </div>
+                  ),
+                )}
+              </div>
+              <Button
+                onClick={runValidation}
+                disabled={isValidating}
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white mt-4 cursor-pointer"
+              >
+                {isValidating ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Activity className="w-4 h-4 mr-2" />
+                )}
+                Execute Validation
+              </Button>
             </div>
+
+            {validationResult && (
+              <ValidationResultView result={validationResult} />
+            )}
           </CardContent>
         </Card>
+      ) : (
+        <>
+          <Card className="shadow-sm border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
+            <CardHeader className="pb-2 bg-zinc-50/50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800">
+              <CardTitle className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                Executive Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <p className="text-zinc-700 dark:text-zinc-300 leading-relaxed text-sm">
+                <FormatText text={result.summary} />
+              </p>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="shadow-sm border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
+              <CardHeader className="pb-2 bg-zinc-50/50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800">
+                <CardTitle className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                  Risk Profile
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-5 space-y-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Threat Level
+                  </span>
+                  <Badge
+                    variant="outline"
+                    className={`px-2.5 py-0.5 rounded-md ${getRiskColor(result.risk_level)}`}
+                  >
+                    {result.risk_level}
+                  </Badge>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                      Complexity
+                    </span>
+                    <span className="text-zinc-500 font-mono">
+                      {result.complexity_score}/10
+                    </span>
+                  </div>
+                  <Progress
+                    value={(result.complexity_score || 0) * 10}
+                    className="h-2"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {mode === "officer" && result.metrics && (
+              <Card className="shadow-sm border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
+                <CardHeader className="pb-2 bg-zinc-50/50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800">
+                  <CardTitle className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                    Quantitative Insights
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <MetricBox
+                      icon={<Clock />}
+                      label="Est. Time"
+                      value={result.metrics.estimated_processing_time}
+                    />
+                    <MetricBox
+                      icon={<Users />}
+                      label="Manpower"
+                      value={result.metrics.manpower_level}
+                    />
+                    <MetricBox
+                      icon={<Activity />}
+                      label="Dept Load"
+                      value={result.metrics.department_load}
+                    />
+                    <MetricBox
+                      icon={<Percent />}
+                      label="Risk Exp"
+                      value={`${result.metrics.risk_exposure_percent}%`}
+                      isDanger={result.metrics.risk_exposure_percent > 60}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {mode === "officer" ? (
+            <Card className="shadow-sm border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800 overflow-hidden">
+              <Tabs defaultValue="workflow" className="w-full">
+                <CardHeader className="p-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+                  <TabsList className="bg-zinc-100 dark:bg-zinc-800/60 p-1 flex rounded-xl gap-1 overflow-x-auto hide-scrollbar border border-zinc-200 dark:border-zinc-800 shadow-inner w-full justify-start">
+                    <TabItem
+                      value="workflow"
+                      icon={
+                        <CheckCircle2 className="w-3.5 h-3.5 text-teal-600" />
+                      }
+                    >
+                      Workflow
+                    </TabItem>
+                    <TabItem
+                      value="checklist"
+                      icon={
+                        <CheckSquare className="w-3.5 h-3.5 text-emerald-500" />
+                      }
+                    >
+                      Checklists
+                    </TabItem>
+                    <TabItem
+                      value="slas"
+                      icon={<Clock className="w-3.5 h-3.5 text-blue-500" />}
+                    >
+                      SLAs
+                    </TabItem>
+                    <TabItem
+                      value="decision_points"
+                      icon={
+                        <GitCommit className="w-3.5 h-3.5 text-indigo-500" />
+                      }
+                    >
+                      Decisions
+                    </TabItem>
+                    <TabItem
+                      value="risks"
+                      icon={
+                        <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
+                      }
+                    >
+                      Risks
+                    </TabItem>
+                    <TabItem
+                      value="ambiguities"
+                      icon={
+                        <FileSearch className="w-3.5 h-3.5 text-amber-500" />
+                      }
+                    >
+                      Ambiguities
+                    </TabItem>
+                    <TabItem
+                      value="gaps"
+                      icon={
+                        <ShieldAlert className="w-3.5 h-3.5 text-orange-500" />
+                      }
+                    >
+                      Gaps
+                    </TabItem>
+                  </TabsList>
+                </CardHeader>
+                <CardContent className="p-0 sm:p-6">
+                  <TabsContent value="workflow" className="m-0 p-4 sm:p-0">
+                    <Timeline items={result.workflow} traceable={true} />
+                  </TabsContent>
+                  <TabsContent value="checklist" className="m-0 p-4 sm:p-0">
+                    <div className="space-y-6">
+                      <InteractiveChecklist
+                        items={result.documents_required}
+                        title="Required Documents"
+                        result={result}
+                        onChecklistUpdate={onChecklistUpdate}
+                      />
+                      <InteractiveChecklist
+                        items={result.checklist}
+                        title="Verification Actions"
+                        result={result}
+                        onChecklistUpdate={onChecklistUpdate}
+                      />
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="slas" className="m-0 p-4 sm:p-0">
+                    <SlaTimeline items={result.slas} />
+                  </TabsContent>
+                  <TabsContent
+                    value="decision_points"
+                    className="m-0 p-4 sm:p-0"
+                  >
+                    <List
+                      items={result.decision_points}
+                      icon={<GitCommit className="w-4 h-4 text-teal-600" />}
+                    />
+                  </TabsContent>
+                  <TabsContent value="risks" className="m-0 p-4 sm:p-0">
+                    <List
+                      items={result.risks}
+                      icon={<AlertTriangle className="w-4 h-4 text-rose-500" />}
+                      containerClass="bg-rose-50/50 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/30"
+                    />
+                  </TabsContent>
+                  <TabsContent value="ambiguities" className="m-0 p-4 sm:p-0">
+                    {result.ambiguities?.length ? (
+                      <ul className="space-y-3">
+                        {result.ambiguities.map((item: any, i: number) => (
+                          <li
+                            key={i}
+                            className="bg-amber-50/50 dark:bg-amber-950/20 p-4 rounded-xl border border-amber-100 dark:border-amber-900/30"
+                          >
+                            <div className="font-semibold text-sm text-amber-900 dark:text-amber-400 mb-1 flex items-center gap-2">
+                              <FileSearch className="w-4 h-4" /> Term: "
+                              {item.term}"
+                            </div>
+                            <div className="text-sm text-amber-800 dark:text-amber-500 leading-relaxed">
+                              Issue: {item.issue}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-zinc-500">
+                        No ambiguities detected.
+                      </p>
+                    )}
+                  </TabsContent>
+                  <TabsContent value="gaps" className="m-0 p-4 sm:p-0">
+                    <List
+                      items={result.compliance_gaps}
+                      icon={<ShieldAlert className="w-4 h-4 text-orange-500" />}
+                      containerClass="bg-orange-50/50 dark:bg-orange-950/20 border-orange-100 dark:border-orange-900/30"
+                    />
+                  </TabsContent>
+                </CardContent>
+              </Tabs>
+            </Card>
+          ) : (
+            <Card className="shadow-sm border-zinc-200 dark:bg-zinc-900 dark:border-zinc-800">
+              <CardHeader className="bg-zinc-50/50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800">
+                <CardTitle className="text-base dark:text-zinc-200 flex items-center gap-2">
+                  <ListChecks className="w-5 h-5 text-teal-600" /> Step-by-Step
+                  Instructions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-6 space-y-8">
+                {result.documents_required?.length > 0 && (
+                  <InteractiveChecklist
+                    items={result.documents_required}
+                    title="What You Need to Gather"
+                    result={result}
+                    onChecklistUpdate={onChecklistUpdate}
+                  />
+                )}
+                <div>
+                  <h4 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
+                    What You Need to Do
+                  </h4>
+                  <Timeline items={result.instructions} traceable={false} />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
     </motion.div>
   );

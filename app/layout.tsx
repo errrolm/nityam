@@ -19,8 +19,12 @@ export const metadata: Metadata = {
   },
   description: "Nityam – Knowledge-to-Workflow Engine",
   applicationName: "Nityam",
+  icons: {
+    icon: "/logoa.png",
+    shortcut: "/logoa.png",
+    apple: "/logoa.png",
+  },
 };
-
 export default function RootLayout({
   children,
 }: Readonly<{

@@ -41,6 +41,30 @@ IMPORTANT: Extract ALL relevant steps for the instructions array. Do not return 
 Policy Text:
 ${policyText}
 `;
+    } else if (mode === "compile_rules") {
+      prompt = `
+You are a deterministic rule compiler. Convert the provided policy text into a strict JSON representation of entities, states, and rules. Return ONLY valid JSON matching this exact schema. Do not include markdown formatting.
+
+{
+  "entities": {
+    "entityName": "type (string, number, boolean)"
+  },
+  "states": ["list", "of", "possible", "states"],
+  "rules": [
+    {
+      "id": "rule_id",
+      "fact": "entityName",
+      "operator": "equal | notEqual | greaterThan | lessThan | contains",
+      "value": "expected_value",
+      "onSuccess": "next_state",
+      "onFailure": "failure_state"
+    }
+  ]
+}
+
+Policy Text:
+${policyText}
+`;
     } else {
       prompt = `
 You are a policy analysis engine. Extract structured data from the provided policy text and return ONLY valid JSON matching this exact schema.

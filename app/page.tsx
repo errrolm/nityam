@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabase";
 import { Inter } from "next/font/google";
-import { Layers, ArrowRight, ShieldCheck, Zap, FileText } from "lucide-react";
+import { ArrowRight, ShieldCheck, Zap, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Grainient from "@/components/Grainient";
 
@@ -84,18 +84,19 @@ export default function LandingPage() {
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 w-full flex items-center justify-between">
+          
+          {/* Updated Logo Section */}
           <div
-            className="flex items-center gap-2.5 group cursor-pointer"
+            className="flex items-center group cursor-pointer h-10 w-auto"
             onClick={() =>
               window.scrollTo({ top: 0, behavior: "smooth" })
             }
           >
-            <div className="p-1.5 bg-teal-500/10 rounded-lg border border-teal-500/20 group-hover:border-teal-500/40 transition-colors">
-              <Layers className="w-5 h-5 text-teal-400" />
-            </div>
-            <span className="font-bold text-lg text-white tracking-tight">
-              Nityam
-            </span>
+            <img 
+              src="/logo.png" 
+              alt="Nityam Logo" 
+              className="h-full w-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity"
+            />
           </div>
 
           <div className="flex items-center gap-4">
@@ -156,9 +157,9 @@ export default function LandingPage() {
               color: "sky",
             },
             {
-              icon: <Layers className="w-6 h-6" />,
-              title: "Dual Views",
-              text: "Toggle between Officer precision and Citizen simplicity with one click.",
+              icon: <Zap className="w-6 h-6" />,
+              title: "Automated Validation",
+              text: "Converts text rules into deterministic, executable evaluation engines.",
               color: "teal",
             },
             {

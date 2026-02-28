@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabase";
 import { Button } from "@/components/ui/button";
-import { Layers, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { Inter } from "next/font/google";
 import Grainient from "@/components/Grainient";
 
@@ -80,11 +80,15 @@ export default function LoginPage() {
 
       <div className="w-full max-w-md p-8 space-y-8 bg-zinc-900/50 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/10 z-10 mx-4">
         <div className="flex flex-col items-center justify-center gap-2 text-center">
-          <div className="p-3 bg-teal-500/10 border border-teal-500/20 text-teal-400 rounded-2xl shadow-[0_0_15px_rgba(20,184,166,0.15)]">
-            <Layers className="w-8 h-8" />
+          <div className="h-12 w-auto mb-2">
+            <img 
+              src="/logo.png" 
+              alt="Nityam Logo" 
+              className="h-full w-auto object-contain"
+            />
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight mt-4">
-            Welcome to Nityam
+          <h1 className="text-2xl font-bold text-white tracking-tight mt-2">
+            Welcome Back
           </h1>
           <p className="text-sm text-zinc-400">
             Enter your credentials to access your workspace.
