@@ -49,6 +49,7 @@ import {
   Search,
   Plus,
   Trash2,
+  Sparkles
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -547,7 +548,7 @@ export default function Home() {
                       </>
                     ) : (
                       <>
-                        <Wand2 className="w-4 h-4 mr-2" /> Generate Workflow
+                        <Sparkles className="w-4 h-4 mr-2" /> Generate Workflow
                       </>
                     )}
                   </Button>
