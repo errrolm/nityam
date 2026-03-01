@@ -1,36 +1,184 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nityam  
+**Knowledge-to-Workflow Engine for Government Policies**  
+**2nd Place – GEC Coders' Club Hack Day**  
 
-## Getting Started
+Devpost: https://gec-coders-club-hack-day.devpost.com/
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Overview
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Nityam** is an AI-powered system that converts unstructured government policy documents into structured, actionable, and verifiable workflow systems.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+It bridges the gap between policy documentation and real-world execution by transforming legal text into:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Step-by-step workflows  
+- Decision trees  
+- Operational checklists  
+- Rule-based validation systems  
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Problem Statement
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Main Problem  
+Government policy documents are written in unstructured legal language. Field implementation requires structured, executable workflows.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Build a system that converts policy documents into:
+- Step-by-step workflows  
+- Decision trees  
+- Operational checklists for field officers  
 
-## Deploy on Vercel
+### Sub Problem  
+- Extract entities, conditions, and rules  
+- Generate a workflow graph (nodes + transitions)  
+- Implement a rule engine to validate whether a given case complies with policy  
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Core Features (Aligned to the PS)
+
+### 1. Policy-to-Workflow Conversion
+
+- Accepts raw policy text (paste or upload)
+- Supports `.txt`, `.pdf`, and `.docx`
+- Extracts structured components from legal language
+- Generates:
+  - Ordered workflow steps
+  - Conditional branches
+  - Decision checkpoints
+  - Required documents
+  - Operational actions
+
+Produces a structured workflow model derived directly from policy text.
+
+---
+
+### 2. Entity & Rule Extraction
+
+Automatically extracts:
+
+**Entities**
+- Applicant attributes  
+- Officer roles  
+- Documents  
+- Numeric thresholds  
+- Boolean conditions  
+
+**Rules**
+- Eligibility criteria  
+- Mandatory procedural steps  
+- Conditional approvals  
+- Rejection conditions  
+
+Creates a machine-readable policy schema.
+
+---
+
+### 3. Workflow Graph Generation
+
+Transforms extracted logic into:
+
+- Nodes (actions / verifications)
+- Transitions (conditional flows)
+- Decision points
+- SLA-linked stages
+
+Produces a structured workflow representation aligned with execution paths.
+
+---
+
+### 4. Operational Checklists
+
+Generates:
+
+- Required documents checklist
+- Verification action checklist
+- Step-by-step operational instructions
+
+Checklists are interactive and persist per workflow.
+
+---
+
+### 5. Risk, Ambiguity & Gap Detection
+
+Automatically identifies:
+
+- Decision points
+- Risk factors
+- Policy ambiguities
+- Compliance gaps
+
+Also provides:
+
+- Risk level classification  
+- Complexity scoring  
+- Operational impact indicators  
+
+---
+
+### 6. Rule Validation Engine
+
+Includes structured validation capability:
+
+- Auto-generated case input form from extracted entities
+- Submission of real-world case data
+- Execution of compiled policy rules
+- Output showing:
+  - Compliance status
+  - Violated conditions
+  - Policy reasoning
+
+Enables verification of whether a case follows policy requirements.
+
+---
+
+### 7. Dual Output Modes
+
+**Officer Mode**
+- Full workflow visualization
+- Decision logic
+- Risk and compliance insights
+- Operational metrics
+
+**Citizen Mode**
+- Simplified instructions
+- Required document guidance
+- Clear procedural flow
+
+---
+
+## Architecture
+
+### Frontend
+- Next.js  
+- TypeScript  
+
+### AI Layer
+- Gemini API for structured extraction and reasoning  
+
+### Backend
+- `/api/gemini` – workflow generation  
+- `/api/validate` – rule validation  
+- Supabase – authentication and data storage  
+
+### Document Processing
+- PDF parsing  
+- DOCX extraction  
+- Plain text ingestion  
+
+---
+
+## How It Works
+
+1. Upload or paste a government policy document.  
+2. The system extracts entities, conditions, and rules.  
+3. A structured workflow graph is generated.  
+4. Operational checklists and decision logic are derived.  
+5. In validation mode:
+   - Case data is submitted.
+   - The rule engine evaluates compliance.
+   - The system determines whether the case follows policy.
+
+---
+
